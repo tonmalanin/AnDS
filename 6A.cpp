@@ -1,46 +1,50 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
-
-int main() {
-  int sz;
-  std::cin >> sz;
-  std::vector<int> vec(sz);
-  for (int i = 0; i < sz; ++i) {
-    std::cin >> vec[i];
-  }
+void find_gds(std::vector<int>& dp, std::vector<int>& seq) {
+  int seq_sz = dp.size();
   const int kIntMin = -2147483647 - 1;
-  std::vector<int> max_end(sz, kIntMin);
-  std::vector<int> dp(sz);
-  for (int i = 0; i < sz; ++i) {
-    int lg = -1;
-    int rg = sz - 1;
-    while (rg - lg > 1) {
-      int md = (lg + rg) / 2;
-      if (max_end[md] < vec[i]) {
-        rg = md;
+  std::vector<int> max_ds_end(seq_sz, kIntMin);
+  for (int i = 0; i < seq_sz; ++i) {
+    int bot_lim = -1;
+    int up_lim = seq_sz - 1;
+    while (up_lim - bot_lim > 1) {
+      int curr = (bot_lim + up_lim) / 2;
+      if (max_ds_end[curr] < seq[i]) {
+        up_lim = curr;
       } else {
-        lg = md;
+        bot_lim = curr;
       }
     }
-    max_end[rg] = vec[i];
-    dp[i] = rg + 1;
+    max_ds_end[up_lim] = seq[i];
+    dp[i] = up_lim + 1;
   }
+}
+
+int main() {
+  int seq_sz;
+  std::cin >> seq_sz;
+  std::vector<int> seq(seq_sz);
+  for (int i = 0; i < seq_sz; ++i) {
+    std::cin >> seq[i];
+  }
+  std::vector<int> dp(seq_sz);
+  find_gds(dp, seq);
   int ans = 0;
   for (auto item : dp) {
     ans = std::max(ans, item);
   }
   std::cout << ans << std::endl;
   int cnt = ans;
-  std::vector<int> ids;
-  for (int i = sz - 1; i > -1; --i) {
+  std::vector<int> elem_nums;
+  for (int i = seq_sz - 1; i > -1; --i) {
     if (dp[i] == cnt) {
-      ids.push_back(i + 1);
+      elem_nums.push_back(i + 1);
       --cnt;
     }
   }
-  std::reverse(ids.begin(), ids.end());
-  for (auto item : ids) {
+  std::reverse(elem_nums.begin(), elem_nums.end());
+  for (auto item : elem_nums) {
     std::cout << item << " ";
   }
 }
