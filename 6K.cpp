@@ -1,47 +1,55 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
-
-int main() {
-  int sz;
-  int cap;
-  std::cin >> sz >> cap;
-  std::vector<int> wgt(sz);
-  for (int i = 0; i < sz; ++i) {
-    std::cin >> wgt[i];
-  }
-  std::vector<int> cost(sz);
-  for (int i = 0; i < sz; ++i) {
-    std::cin >> cost[i];
-  }
-  std::vector<std::vector<int>> dp(sz + 1, std::vector<int>(cap + 1, 0));
-  for (int i = 1; i <= sz; ++i) {
-    for (int j = 1; j <= cap; ++j) {
+int package_solving(std::vector<std::vector<int>>& dp,
+                    std::vector<int>& req_source, std::vector<int>& reward) {
+  int tasks_num = reward.size();
+  int source_num = dp[0].size() - 1;
+  for (int i = 1; i <= tasks_num; ++i) {
+    for (int j = 1; j <= source_num; ++j) {
       dp[i][j] = dp[i - 1][j];
-      if (j >= wgt[i - 1] and
-          dp[i - 1][j - wgt[i - 1]] + cost[i - 1] > dp[i][j]) {
-        dp[i][j] = dp[i - 1][j - wgt[i - 1]] + cost[i - 1];
+      if (j >= req_source[i - 1] and
+          dp[i - 1][j - req_source[i - 1]] + reward[i - 1] > dp[i][j]) {
+        dp[i][j] = dp[i - 1][j - req_source[i - 1]] + reward[i - 1];
       }
     }
   }
   int ans = 0;
-  int curr_wgt = 0;
-  for (int i = 0; i <= cap; ++i) {
-    if (dp[sz][i] > ans) {
-      ans = dp[sz][i];
-      curr_wgt = i;
+  int curr_source_waste = 0;
+  for (int i = 0; i <= source_num; ++i) {
+    if (dp[tasks_num][i] > ans) {
+      ans = dp[tasks_num][i];
+      curr_source_waste = i;
     }
   }
-  std::vector<int> ids;
-  for (int i = sz; i > 0; --i) {
-    if (curr_wgt >= wgt[i - 1] and
-        dp[i][curr_wgt] == dp[i - 1][curr_wgt - wgt[i - 1]] + cost[i - 1]) {
-      ids.push_back(i);
-      curr_wgt -= wgt[i - 1];
+  return curr_source_waste;
+}
+int main() {
+  int tasks_num;
+  int source_num;
+  std::cin >> tasks_num >> source_num;
+  std::vector<int> req_source(tasks_num);
+  for (int i = 0; i < tasks_num; ++i) {
+    std::cin >> req_source[i];
+  }
+  std::vector<int> reward(tasks_num);
+  for (int i = 0; i < tasks_num; ++i) {
+    std::cin >> reward[i];
+  }
+  std::vector<std::vector<int>> dp(tasks_num + 1,
+                                   std::vector<int>(source_num + 1, 0));
+  int curr_source_waste = package_solving(dp, req_source, reward);
+  std::vector<int> tasks_id;
+  for (int i = tasks_num; i > 0; --i) {
+    if (curr_source_waste >= req_source[i - 1] and
+        dp[i][curr_source_waste] ==
+            dp[i - 1][curr_source_waste - req_source[i - 1]] + reward[i - 1]) {
+      tasks_id.push_back(i);
+      curr_source_waste -= req_source[i - 1];
     }
   }
-  std::reverse(ids.begin(), ids.end());
-  for (auto item : ids) {
+  std::reverse(tasks_id.begin(), tasks_id.end());
+  for (auto item : tasks_id) {
     std::cout << item << std::endl;
   }
 }
