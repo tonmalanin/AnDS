@@ -7,49 +7,68 @@ struct Edge {
   int num;
 };
 
-int Dfs(int curr, std::vector<std::vector<Edge>>& graph,
-        std::vector<int>& depth, std::vector<int>& ans, int curr_d, int path) {
-  depth[curr] = curr_d;
-  int h_anc = curr_d;
-  for (auto elem : graph[curr]) {
-    int dest = elem.dest;
-    int num = elem.num;
-    if (depth[dest] != -1 and num != path) {
-      h_anc = std::min(h_anc, depth[dest]);
-    } else if (depth[dest] == -1) {
-      int res = Dfs(dest, graph, depth, ans, curr_d + 1, num);
-      if (res > curr_d) {
-        ans.push_back(num);
-      } else {
-        h_anc = std::min(h_anc, res);
+struct Graph {
+  int vert_num;
+  std::vector<std::vector<Edge>> adj_list;
+  Graph(int vert_num, std::vector<std::pair<int, int>>& edge_list)
+      : vert_num(vert_num) {
+    adj_list.resize(vert_num);
+    int counter = 0;
+    for (auto pair : edge_list) {
+      int start = pair.first;
+      int fin = pair.second;
+      adj_list[start - 1].push_back({fin - 1, counter + 1});
+      adj_list[fin - 1].push_back({start - 1, counter + 1});
+      ++counter;
+    }
+  }
+
+  int Dfs(int curr_vert, std::vector<int>& depth, std::vector<int>& ans,
+          int curr_depth, int parent) {
+    depth[curr_vert] = curr_depth;
+    int highest_reachable = curr_depth;
+    for (auto vert : adj_list[curr_vert]) {
+      int dest = vert.dest;
+      int num = vert.num;
+      if (depth[dest] != -1 and dest != parent) {
+        highest_reachable = std::min(highest_reachable, depth[dest]);
+      } else if (depth[dest] == -1) {
+        int subtree_result = Dfs(dest, depth, ans, curr_depth + 1, curr_vert);
+        if (subtree_result > curr_depth) {
+          ans.push_back(num);
+        } else {
+          highest_reachable = std::min(highest_reachable, subtree_result);
+        }
       }
     }
+    return highest_reachable;
   }
-  return h_anc;
-}
+
+  std::vector<int> FindBridges() {
+    std::vector<int> ans;
+    std::vector<int> depth(vert_num, -1);
+    for (int i = 0; i < vert_num; ++i) {
+      if (depth[i] == -1) {
+        Dfs(i, depth, ans, 0, -1);
+      }
+    }
+    return ans;
+  }
+};
 
 int main() {
-  int v_n;
-  int e_n;
-  std::cin >> v_n >> e_n;
-  std::vector<std::vector<Edge>> graph(v_n);
-  for (int i = 0; i < e_n; ++i) {
-    int start;
-    int fin;
-    std::cin >> start >> fin;
-    graph[start - 1].push_back({fin - 1, i + 1});
-    graph[fin - 1].push_back({start - 1, i + 1});
+  int vert_num;
+  int edge_num;
+  std::cin >> vert_num >> edge_num;
+  std::vector<std::pair<int, int>> edge_list(edge_num);
+  for (int i = 0; i < edge_num; ++i) {
+    std::cin >> edge_list[i].first >> edge_list[i].second;
   }
-  std::vector<int> ans;
-  std::vector<int> depth(v_n, -1);
-  for (int i = 0; i < v_n; ++i) {
-    if (depth[i] == -1) {
-      Dfs(i, graph, depth, ans, 0, -1);
-    }
-  }
+  Graph graph(vert_num, edge_list);
+  std::vector<int> ans = graph.FindBridges();
   std::sort(ans.begin(), ans.end());
   std::cout << ans.size() << std::endl;
-  for (auto elem : ans) {
-    std::cout << elem << " ";
+  for (auto edge : ans) {
+    std::cout << edge << " ";
   }
 }
