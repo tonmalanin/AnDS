@@ -1,50 +1,52 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
-void find_gds(std::vector<int>& dp, std::vector<int>& seq) {
-  int seq_sz = dp.size();
+
+int find_lns(std::vector<int>& lns, std::vector<int>& array) {
+  int size = array.size();
+  std::vector<int> dp(size);
   const int kIntMin = -2147483647 - 1;
-  std::vector<int> max_ds_end(seq_sz, kIntMin);
-  for (int i = 0; i < seq_sz; ++i) {
-    int bot_lim = -1;
-    int up_lim = seq_sz - 1;
-    while (up_lim - bot_lim > 1) {
-      int curr = (bot_lim + up_lim) / 2;
-      if (max_ds_end[curr] < seq[i]) {
-        up_lim = curr;
+  std::vector<int> max_end(size, kIntMin);
+  for (int i = 0; i < size; ++i) {
+    int l = -1;
+    int r = size - 1;
+    while (r - l > 1) {
+      int md = (l + r) / 2;
+      if (max_end[md] < array[i]) {
+        r = md;
       } else {
-        bot_lim = curr;
+        l = md;
       }
     }
-    max_ds_end[up_lim] = seq[i];
-    dp[i] = up_lim + 1;
+    max_end[r] = array[i];
+    dp[i] = r + 1;
   }
+  int answer = 0;
+  for (auto elem : dp) {
+    answer = std::max(answer, elem);
+  }
+  int counter = answer;
+  for (int i = size - 1; i > -1; --i) {
+    if (dp[i] == counter) {
+      lns.push_back(i + 1);
+      --counter;
+    }
+  }
+  std::reverse(lns.begin(), lns.end());
+  return answer;
 }
 
 int main() {
-  int seq_sz;
-  std::cin >> seq_sz;
-  std::vector<int> seq(seq_sz);
-  for (int i = 0; i < seq_sz; ++i) {
-    std::cin >> seq[i];
+  int size;
+  std::cin >> size;
+  std::vector<int> array(size);
+  for (int i = 0; i < size; ++i) {
+    std::cin >> array[i];
   }
-  std::vector<int> dp(seq_sz);
-  find_gds(dp, seq);
-  int ans = 0;
-  for (auto item : dp) {
-    ans = std::max(ans, item);
-  }
-  std::cout << ans << std::endl;
-  int cnt = ans;
-  std::vector<int> elem_nums;
-  for (int i = seq_sz - 1; i > -1; --i) {
-    if (dp[i] == cnt) {
-      elem_nums.push_back(i + 1);
-      --cnt;
-    }
-  }
-  std::reverse(elem_nums.begin(), elem_nums.end());
-  for (auto item : elem_nums) {
-    std::cout << item << " ";
+  std::vector<int> lns;
+  int answer = find_lns(lns, array);
+  std::cout << answer << std::endl;
+  for (auto index : lns) {
+    std::cout << index << " ";
   }
 }
